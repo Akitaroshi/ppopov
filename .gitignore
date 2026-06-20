@@ -1,0 +1,32 @@
+# Виртуальное окружение Python (самое главное)
+.venv/
+venv/
+env/
+ENV/
+
+# Компилированные файлы Python
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Настройки редакторов кода (VS Code / PyCharm)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Локальные базы данных (на всякий случай)
+*.sqlite3
+
+# Локальные файлы конфигурации и секреты
+.env
+local_settings.py
+secrets.json
+
+# Системные файлы операционных систем
+.DS_Store
+Thumbs.db

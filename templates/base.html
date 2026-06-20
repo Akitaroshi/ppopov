@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Магазин спортивных товаров{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+        // Избегаем белой вспышки: мгновенно ставим темную тему по умолчанию
+        const savedTheme = localStorage.getItem('fansport_theme') || 'dark';
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <style>
+        /* Скрываем стандартные стрелочки у полей ввода цен */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300 bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-white flex flex-col min-h-screen">
+
+    <!-- Навигационная панель -->
+    <nav class="bg-white/90 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-6 sm:space-x-8">
+                    <a href="{% url 'about' %}" class="text-xl font-black tracking-tight text-indigo-600 dark:text-indigo-400">FS</a>
+                    <div class="flex space-x-4 sm:space-x-6">
+                        <a href="{% url 'landing' %}" class="{% if request.resolver_match.url_name == 'landing' %}text-indigo-600 dark:text-indigo-400 font-bold border-b-2 border-indigo-600 dark:border-indigo-400 pb-1{% else %}text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium{% endif %} transition duration-150 text-sm sm:text-base">Каталог</a>
+                        <a href="{% url 'about' %}" class="{% if request.resolver_match.url_name == 'about' %}text-indigo-600 dark:text-indigo-400 font-bold border-b-2 border-indigo-600 dark:border-indigo-400 pb-1{% else %}text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium{% endif %} transition duration-150 text-sm sm:text-base">О нас</a>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4 sm:space-x-6">
+                    <!-- Смена темы -->
+                    <button onclick="toggleTheme()" class="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition focus:outline-none">
+                        <svg id="themeMoon" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg id="themeSun" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m2.828-9.9a5 5 0 117.07 7.07m-7.07-7.07l.707-.707" />
+                        </svg>
+                    </button>
+
+                    <!-- Корзина -->
+                    <button onclick="openCart()" class="relative flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition font-medium focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        <span class="hidden md:inline text-sm sm:text-base">Корзина</span>
+<span id="cartBadge" class="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black border-2 border-white dark:border-slate-900 leading-none select-none hidden">0</span>                    </button>
+
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'profile' %}" class="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition text-sm sm:text-base">Профиль</a>
+                        <form action="{% url 'logout' %}" method="post" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="text-red-500 hover:text-red-600 font-medium transition text-sm sm:text-base">Выйти</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition text-sm sm:text-base">Войти</a>
+                        <a href="{% url 'register' %}" class="bg-indigo-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-medium hover:bg-indigo-700 transition shadow-sm text-sm sm:text-base">Регистрация</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Тосты -->
+    <div id="toastContainer" class="fixed top-20 right-4 z-[120] pointer-events-none space-y-2"></div>
+
+    <!-- Затемнение фона над всеми элементами (z-[100]) -->
+    <div id="cartBackdrop" onclick="closeCart()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] hidden transition-all"></div>
+    
+    <!-- Выдвижная шторка поверх затемнения (z-[110]) -->
+    <div id="cartDrawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl z-[110] transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Ваша корзина</h2>
+            <button onclick="closeCart()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div id="cartItemsList" class="flex-grow p-6 overflow-y-auto space-y-4">
+            <!-- Заполняется JS -->
+        </div>
+
+        <div class="p-6 border-t border-slate-100 dark:border-slate-800 space-y-4 bg-slate-50/50 dark:bg-slate-900/50">
+            <div class="flex justify-between items-center text-lg font-bold text-slate-900 dark:text-white">
+                <span>Итого к оплате:</span>
+                <span id="cartTotalSum">0 ₽</span>
+            </div>
+            <button onclick="checkoutCart()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition duration-150 shadow-sm active:scale-95">
+                Оформить заказ
+            </button>
+        </div>
+    </div>
+
+    <!-- Контент -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Подвал -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-400 text-sm">
+            &copy; {% now "Y" %} Fan-Sport. Все права защищены.
+        </div>
+    </footer>
+
+    <script>
+        function initTheme() {
+            const savedTheme = localStorage.getItem('fansport_theme') || 'dark';
+            const moon = document.getElementById('themeMoon');
+            const sun = document.getElementById('themeSun');
+            
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                sun.classList.remove('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                moon.classList.remove('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const sun = document.getElementById('themeSun');
+            const moon = document.getElementById('themeMoon');
+
+            if (isDark) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('fansport_theme', 'light');
+                sun.classList.add('hidden');
+                moon.classList.remove('hidden');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('fansport_theme', 'dark');
+                moon.classList.add('hidden');
+                sun.classList.remove('hidden');
+            }
+        }
+
+        function showToast(productName) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = "flex items-center space-x-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-4 py-3 rounded-2xl shadow-xl border border-slate-150 dark:border-slate-700 transform translate-x-12 opacity-0 transition-all duration-300 pointer-events-auto max-w-xs";
+            toast.innerHTML = `
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <p class="text-xs font-bold text-slate-900 dark:text-white">Добавлено в корзину</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">${productName}</p>
+                </div>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-x-12', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-x-12', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        function getCart() {
+            return JSON.parse(localStorage.getItem('fansport_cart')) || [];
+        }
+
+        function saveCart(cart) {
+            localStorage.setItem('fansport_cart', JSON.stringify(cart));
+            updateCartBadge();
+            renderCart();
+        }
+
+        function updateCartBadge() {
+            const cart = getCart();
+            const badge = document.getElementById('cartBadge');
+            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            if (badge) {
+                badge.innerText = totalItems;
+                if (totalItems > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        }
+
+        // Принудительно приводим ID к строке во избежание несовпадения типов JS
+        function addToCart(id, name, price, img) {
+            let cart = getCart();
+            const existingItem = cart.find(item => String(item.id) === String(id));
+            if (existingItem) {
+                existingItem.qty += 1;
+            } else {
+                cart.push({ id: String(id), name, price: parseFloat(price), img: img, qty: 1 });
+            }
+            saveCart(cart);
+            showToast(name);
+        }
+
+        function removeFromCart(id) {
+            let cart = getCart();
+            cart = cart.filter(item => String(item.id) !== String(id));
+            saveCart(cart);
+        }
+
+        function changeQty(id, delta) {
+            let cart = getCart();
+            const item = cart.find(item => String(item.id) === String(id));
+            if (item) {
+                item.qty += delta;
+                if (item.qty <= 0) {
+                    cart = cart.filter(i => String(i.id) !== String(id));
+                }
+            }
+            saveCart(cart);
+        }
+
+        function renderCart() {
+            const cart = getCart();
+            const listContainer = document.getElementById('cartItemsList');
+            const totalSumContainer = document.getElementById('cartTotalSum');
+            
+            if (!listContainer || !totalSumContainer) return;
+
+            if (cart.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 space-y-2">
+                        <svg class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        <p class="font-medium text-sm">Корзина пуста</p>
+                    </div>
+                `;
+                totalSumContainer.innerText = "0 ₽";
+                return;
+            }
+
+            let html = '';
+            let total = 0;
+            cart.forEach(item => {
+                total += item.price * item.qty;
+                html += `
+                    <div class="flex items-center space-x-4 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-800">
+                        <img src="${item.img || 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=100'}" class="w-16 h-16 object-cover rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <div class="flex-grow min-w-0">
+                            <h4 class="font-bold text-sm text-slate-900 dark:text-white truncate">${item.name}</h4>
+                            <p class="text-indigo-600 dark:text-indigo-400 font-bold text-sm">${item.price} ₽</p>
+                            <div class="flex items-center space-x-2 mt-1.5">
+                                <button onclick="changeQty('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 font-bold text-xs select-none dark:text-white">-</button>
+                                <span class="text-slate-700 dark:text-slate-300 text-xs font-semibold select-none">${item.qty}</span>
+                                <button onclick="changeQty('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 font-bold text-xs select-none dark:text-white">+</button>
+                            </div>
+                        </div>
+                        <button onclick="removeFromCart('${item.id}')" class="text-slate-400 hover:text-red-500 transition">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+            });
+
+            listContainer.innerHTML = html;
+            totalSumContainer.innerText = `${total.toFixed(2)} ₽`;
+        }
+
+        function openCart() {
+            document.getElementById('cartDrawer').classList.remove('translate-x-full');
+            document.getElementById('cartBackdrop').classList.remove('hidden');
+        }
+
+        function closeCart() {
+            document.getElementById('cartDrawer').classList.add('translate-x-full');
+            document.getElementById('cartBackdrop').classList.add('hidden');
+        }
+
+        function checkoutCart() {
+            const cart = getCart();
+            if (cart.length === 0) return;
+            alert(`Заказ оформлен! Всего позиций: ${cart.length}. Спасибо за покупку в Fan-Sport!`);
+            localStorage.removeItem('fansport_cart');
+            updateCartBadge();
+            renderCart();
+            closeCart();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            updateCartBadge();
+            renderCart();
+        });
+    </script>
+</body>
+</html>
